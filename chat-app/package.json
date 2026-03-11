@@ -1,0 +1,26 @@
+{
+  "name": "fleetsmart-chat",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev:server": "node --watch server.js",
+    "dev:client": "vite --open",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "ai": "^4",
+    "@ai-sdk/anthropic": "^1",
+    "@ai-sdk/openai": "^1",
+    "@ai-sdk/google": "^1",
+    "@ai-sdk/mcp": "^0",
+    "express": "^4",
+    "dotenv": "^16"
+  },
+  "devDependencies": {
+    "vite": "^6",
+    "@vitejs/plugin-react": "^4",
+    "react": "^19",
+    "react-dom": "^19"
+  }
+}
