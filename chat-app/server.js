@@ -1,13 +1,38 @@
 import "dotenv/config";
 import express from "express";
 import { handleChat } from "./lib/chat.js";
-import { closeMCP } from "./lib/mcp.js";
+import { closeMCP, mcpEvents } from "./lib/mcp.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static("public"));
+
+// SSE endpoint for MCP progress notifications
+app.get("/api/progress", (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
+
+  function onProgress(data) {
+    res.write(`data: ${JSON.stringify({ type: "progress", ...data })}\n\n`);
+  }
+
+  function onLog(data) {
+    res.write(`data: ${JSON.stringify({ type: "log", ...data })}\n\n`);
+  }
+
+  mcpEvents.on("progress", onProgress);
+  mcpEvents.on("log", onLog);
+
+  req.on("close", () => {
+    mcpEvents.off("progress", onProgress);
+    mcpEvents.off("log", onLog);
+  });
+});
 
 app.post("/api/chat", async (req, res) => {
   const { provider = "claude", messages } = req.body;
@@ -17,8 +42,7 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const result = await handleChat({ provider, messages });
-    result.pipeTextStreamToResponse(res);
+    await handleChat({ provider, messages, res });
   } catch (err) {
     console.error("Chat error:", err);
     if (!res.headersSent) {
